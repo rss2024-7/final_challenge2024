@@ -1,0 +1,19 @@
+[15.584s] Invoking command in '/home/racecar/racecar_ws/src/final_challenge2024/build/final_challenge': PYTHONPATH=/home/racecar/racecar_ws/src/final_challenge2024/build/final_challenge/prefix_override:/home/racecar/racecar_ws/src/final_challenge2024/install/final_challenge/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/racecar/racecar_ws/src/final_challenge2024/build/final_challenge/build --no-deps install_data
+[21.544s] running develop
+[22.700s] running egg_info
+[22.701s] writing final_challenge.egg-info/PKG-INFO
+[22.709s] writing dependency_links to final_challenge.egg-info/dependency_links.txt
+[22.713s] writing entry points to final_challenge.egg-info/entry_points.txt
+[22.716s] writing requirements to final_challenge.egg-info/requires.txt
+[22.719s] writing top-level names to final_challenge.egg-info/top_level.txt
+[22.906s] reading manifest file 'final_challenge.egg-info/SOURCES.txt'
+[22.969s] writing manifest file 'final_challenge.egg-info/SOURCES.txt'
+[23.477s] running build_ext
+[23.478s] Creating /home/racecar/racecar_ws/src/final_challenge2024/install/final_challenge/lib/python3.8/site-packages/site.py
+[23.578s] Creating /home/racecar/racecar_ws/src/final_challenge2024/install/final_challenge/lib/python3.8/site-packages/final-challenge.egg-link (link to .)
+[23.608s] 
+[23.609s] Installed /home/racecar/racecar_ws/src/final_challenge2024/build/final_challenge
+[23.612s] running install_data
+[23.659s] creating /home/racecar/racecar_ws/src/final_challenge2024/install/final_challenge/share/final_challenge/launch
+[23.674s] copying launch/planner.launch.xml -> /home/racecar/racecar_ws/src/final_challenge2024/install/final_challenge/share/final_challenge/launch
+[23.732s] Invoked command in '/home/racecar/racecar_ws/src/final_challenge2024/build/final_challenge' returned '0': PYTHONPATH=/home/racecar/racecar_ws/src/final_challenge2024/build/final_challenge/prefix_override:/home/racecar/racecar_ws/src/final_challenge2024/install/final_challenge/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/racecar/racecar_ws/src/final_challenge2024/build/final_challenge/build --no-deps install_data

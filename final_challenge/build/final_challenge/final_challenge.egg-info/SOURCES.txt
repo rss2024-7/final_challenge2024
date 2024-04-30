@@ -1,0 +1,12 @@
+package.xml
+setup.cfg
+setup.py
+final_challenge/__init__.py
+final_challenge.egg-info/PKG-INFO
+final_challenge.egg-info/SOURCES.txt
+final_challenge.egg-info/dependency_links.txt
+final_challenge.egg-info/entry_points.txt
+final_challenge.egg-info/requires.txt
+final_challenge.egg-info/top_level.txt
+final_challenge.egg-info/zip-safe
+resource/final_challenge
