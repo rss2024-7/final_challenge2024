@@ -1,0 +1,203 @@
+[0.000000] (-) TimerEvent: {}
+[0.000362] (final_challenge) JobQueued: {'identifier': 'final_challenge', 'dependencies': OrderedDict()}
+[0.000519] (final_challenge) JobStarted: {'identifier': 'final_challenge'}
+[0.098511] (-) TimerEvent: {}
+[0.199508] (-) TimerEvent: {}
+[0.300368] (-) TimerEvent: {}
+[0.400963] (-) TimerEvent: {}
+[0.501833] (-) TimerEvent: {}
+[0.603496] (-) TimerEvent: {}
+[0.704464] (-) TimerEvent: {}
+[0.814096] (-) TimerEvent: {}
+[0.915670] (-) TimerEvent: {}
+[1.016111] (-) TimerEvent: {}
+[1.116789] (-) TimerEvent: {}
+[1.217729] (-) TimerEvent: {}
+[1.318486] (-) TimerEvent: {}
+[1.419466] (-) TimerEvent: {}
+[1.521983] (-) TimerEvent: {}
+[1.622553] (-) TimerEvent: {}
+[1.723160] (-) TimerEvent: {}
+[1.823899] (-) TimerEvent: {}
+[1.924772] (-) TimerEvent: {}
+[2.025314] (-) TimerEvent: {}
+[2.125895] (-) TimerEvent: {}
+[2.226564] (-) TimerEvent: {}
+[2.327208] (-) TimerEvent: {}
+[2.427863] (-) TimerEvent: {}
+[2.528542] (-) TimerEvent: {}
+[2.629234] (-) TimerEvent: {}
+[2.730328] (-) TimerEvent: {}
+[2.830863] (-) TimerEvent: {}
+[2.931875] (-) TimerEvent: {}
+[3.032424] (-) TimerEvent: {}
+[3.132982] (-) TimerEvent: {}
+[3.233606] (-) TimerEvent: {}
+[3.334260] (-) TimerEvent: {}
+[3.435045] (-) TimerEvent: {}
+[3.535663] (-) TimerEvent: {}
+[3.636345] (-) TimerEvent: {}
+[3.736964] (-) TimerEvent: {}
+[3.837675] (-) TimerEvent: {}
+[3.938256] (-) TimerEvent: {}
+[4.038893] (-) TimerEvent: {}
+[4.140376] (-) TimerEvent: {}
+[4.240968] (-) TimerEvent: {}
+[4.341590] (-) TimerEvent: {}
+[4.442357] (-) TimerEvent: {}
+[4.542966] (-) TimerEvent: {}
+[4.643607] (-) TimerEvent: {}
+[4.744224] (-) TimerEvent: {}
+[4.845057] (-) TimerEvent: {}
+[4.945762] (-) TimerEvent: {}
+[5.046251] (-) TimerEvent: {}
+[5.146756] (-) TimerEvent: {}
+[5.247282] (-) TimerEvent: {}
+[5.347984] (-) TimerEvent: {}
+[5.449890] (-) TimerEvent: {}
+[5.550677] (-) TimerEvent: {}
+[5.651148] (-) TimerEvent: {}
+[5.751606] (-) TimerEvent: {}
+[5.852305] (-) TimerEvent: {}
+[5.952856] (-) TimerEvent: {}
+[6.053533] (-) TimerEvent: {}
+[6.154175] (-) TimerEvent: {}
+[6.254727] (-) TimerEvent: {}
+[6.355271] (-) TimerEvent: {}
+[6.455821] (-) TimerEvent: {}
+[6.556467] (-) TimerEvent: {}
+[6.656968] (-) TimerEvent: {}
+[6.757528] (-) TimerEvent: {}
+[6.858351] (-) TimerEvent: {}
+[6.959197] (-) TimerEvent: {}
+[7.059792] (-) TimerEvent: {}
+[7.160338] (-) TimerEvent: {}
+[7.260991] (-) TimerEvent: {}
+[7.362099] (-) TimerEvent: {}
+[7.462664] (-) TimerEvent: {}
+[7.563431] (-) TimerEvent: {}
+[7.664015] (-) TimerEvent: {}
+[7.764563] (-) TimerEvent: {}
+[7.865104] (-) TimerEvent: {}
+[7.965629] (-) TimerEvent: {}
+[8.066456] (-) TimerEvent: {}
+[8.166984] (-) TimerEvent: {}
+[8.267644] (-) TimerEvent: {}
+[8.368261] (-) TimerEvent: {}
+[8.468786] (-) TimerEvent: {}
+[8.569272] (-) TimerEvent: {}
+[8.669911] (-) TimerEvent: {}
+[8.770392] (-) TimerEvent: {}
+[8.870911] (-) TimerEvent: {}
+[8.971723] (-) TimerEvent: {}
+[9.072426] (-) TimerEvent: {}
+[9.173127] (-) TimerEvent: {}
+[9.273732] (-) TimerEvent: {}
+[9.374237] (-) TimerEvent: {}
+[9.475038] (-) TimerEvent: {}
+[9.575801] (-) TimerEvent: {}
+[9.676473] (-) TimerEvent: {}
+[9.777028] (-) TimerEvent: {}
+[9.877645] (-) TimerEvent: {}
+[9.978310] (-) TimerEvent: {}
+[10.078900] (-) TimerEvent: {}
+[10.179943] (-) TimerEvent: {}
+[10.280475] (-) TimerEvent: {}
+[10.381105] (-) TimerEvent: {}
+[10.481687] (-) TimerEvent: {}
+[10.582262] (-) TimerEvent: {}
+[10.682851] (-) TimerEvent: {}
+[10.783570] (-) TimerEvent: {}
+[10.884182] (-) TimerEvent: {}
+[10.984824] (-) TimerEvent: {}
+[11.085679] (-) TimerEvent: {}
+[11.186309] (-) TimerEvent: {}
+[11.286954] (-) TimerEvent: {}
+[11.388145] (-) TimerEvent: {}
+[11.488934] (-) TimerEvent: {}
+[11.507026] (final_challenge) Command: {'cmd': ['/usr/bin/python3', 'setup.py', 'develop', '--editable', '--build-directory', '/home/racecar/racecar_ws/src/final_challenge2024/build/final_challenge/build', '--no-deps', 'install_data'], 'cwd': '/home/racecar/racecar_ws/src/final_challenge2024/build/final_challenge', 'env': {'PYTHONIOENCODING': 'utf-8', 'HOSTNAME': '04bf17013a04', 'SSH_AGENT_PID': '1102', 'GIT_ASKPASS': '/home/racecar/.vscode-server/bin/8b3775030ed1a69b13e4f4c628c612102e30a681/extensions/git/dist/askpass.sh', 'SHLVL': '1', 'LD_LIBRARY_PATH': '/home/racecar/racecar_ws/install/vs_msgs/lib:/home/racecar/racecar_ws/install/custom_msgs/lib:/opt/ros/foxy/opt/yaml_cpp_vendor/lib:/opt/ros/foxy/opt/rviz_ogre_vendor/lib:/opt/ros/foxy/lib/x86_64-linux-gnu:/opt/ros/foxy/lib', 'BROWSER': '/home/racecar/.vscode-server/bin/8b3775030ed1a69b13e4f4c628c612102e30a681/bin/helpers/browser.sh', 'HOME': '/home/racecar', 'OLDPWD': '/home/racecar/racecar_ws/src/final_challenge2024/final_challenge', 'TERM_PROGRAM_VERSION': '1.85.2', 'VSCODE_IPC_HOOK_CLI': '/tmp/vscode-ipc-e1331d22-28c0-4c71-82b5-8cb010867826.sock', 'ROS_PYTHON_VERSION': '3', 'VSCODE_GIT_ASKPASS_MAIN': '/home/racecar/.vscode-server/bin/8b3775030ed1a69b13e4f4c628c612102e30a681/extensions/git/dist/askpass-main.js', 'VSCODE_GIT_ASKPASS_NODE': '/home/racecar/.vscode-server/bin/8b3775030ed1a69b13e4f4c628c612102e30a681/node', 'COLORTERM': 'truecolor', 'REMOTE_CONTAINERS': 'true', 'COLCON_PREFIX_PATH': '/home/racecar/racecar_ws/src/final_challenge2024/install:/home/racecar/racecar_ws/src/final_challenge2024/final_challenge/install:/home/racecar/racecar_ws/install:/home/sim_ws/install', 'ROS_DISTRO': 'foxy', 'REMOTE_CONTAINERS_IPC': '/tmp/vscode-remote-containers-ipc-81d13247-f535-4431-8394-e7b4095d6e89.sock', '_': '/usr/bin/colcon', 'ROS_VERSION': '2', 'TERM': 'xterm-256color', 'ROS_LOCALHOST_ONLY': '0', 'PATH': '/opt/ros/foxy/bin:/home/racecar/.vscode-server/bin/8b3775030ed1a69b13e4f4c628c612102e30a681/bin/remote-cli:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin', 'DISPLAY': '172.18.192.1:0.0', 'LANG': 'en_US.UTF-8', 'VSCODE_GIT_IPC_HANDLE': '/tmp/vscode-git-aec1aa4683.sock', 'TERM_PROGRAM': 'vscode', 'SSH_AUTH_SOCK': '/tmp/ssh-xiFwpqjhmxFw/agent.1101', 'AMENT_PREFIX_PATH': '/home/racecar/racecar_ws/src/final_challenge2024/install/final_challenge:/home/racecar/racecar_ws/src/final_challenge2024/final_challenge/install/final_challenge:/home/sim_ws/install/racecar_simulator:/home/racecar/racecar_ws/install/wall_follower:/home/racecar/racecar_ws/install/vs_msgs:/home/racecar/racecar_ws/install/visual_servoing:/home/racecar/racecar_ws/install/safety_controller:/home/racecar/racecar_ws/install/ros_exercises:/home/racecar/racecar_ws/install/localization:/opt/ros/foxy', 'SHELL': '/bin/bash', 'SIM_WS': '/home/sim_ws', 'VSCODE_GIT_ASKPASS_EXTRA_ARGS': '', 'PWD': '/home/racecar/racecar_ws/src/final_challenge2024/build/final_challenge', 'PYTHONPATH': '/home/racecar/racecar_ws/src/final_challenge2024/build/final_challenge/prefix_override:/home/racecar/racecar_ws/src/final_challenge2024/install/final_challenge/lib/python3.8/site-packages:/home/racecar/racecar_ws/src/final_challenge2024/build/final_challenge:/home/racecar/racecar_ws/src/final_challenge2024/install/final_challenge/lib/python3.8/site-packages:/home/racecar/racecar_ws/src/final_challenge2024/final_challenge/build/final_challenge:/home/racecar/racecar_ws/src/final_challenge2024/final_challenge/install/final_challenge/lib/python3.8/site-packages:/home/racecar/racecar_ws/build/wall_follower:/home/racecar/racecar_ws/install/wall_follower/lib/python3.8/site-packages:/home/racecar/racecar_ws/install/vs_msgs/lib/python3.8/site-packages:/home/racecar/racecar_ws/build/visual_servoing:/home/racecar/racecar_ws/install/visual_servoing/lib/python3.8/site-packages:/home/racecar/racecar_ws/build/safety_controller:/home/racecar/racecar_ws/install/safety_controller/lib/python3.8/site-packages:/home/racecar/racecar_ws/build/ros_exercises:/home/racecar/racecar_ws/install/ros_exercises/lib/python3.8/site-packages:/home/racecar/racecar_ws/build/localization:/home/racecar/racecar_ws/install/localization/lib/python3.8/site-packages:/home/racecar/racecar_ws/install/custom_msgs/lib/python3.8/site-packages:/opt/ros/foxy/lib/python3.8/site-packages', 'NO_VNC_VERSION': '1.4.0', 'COLCON': '1', 'CMAKE_PREFIX_PATH': '/home/sim_ws/install/racecar_simulator:/home/racecar/racecar_ws/install/vs_msgs:/home/racecar/racecar_ws/install/custom_msgs'}, 'shell': False}
+[11.589075] (-) TimerEvent: {}
+[11.689682] (-) TimerEvent: {}
+[11.790211] (-) TimerEvent: {}
+[11.890806] (-) TimerEvent: {}
+[11.991625] (-) TimerEvent: {}
+[12.092643] (-) TimerEvent: {}
+[12.193441] (-) TimerEvent: {}
+[12.294005] (-) TimerEvent: {}
+[12.394627] (-) TimerEvent: {}
+[12.495184] (-) TimerEvent: {}
+[12.596059] (-) TimerEvent: {}
+[12.696738] (-) TimerEvent: {}
+[12.797286] (-) TimerEvent: {}
+[12.897801] (-) TimerEvent: {}
+[12.998347] (-) TimerEvent: {}
+[13.099119] (-) TimerEvent: {}
+[13.200025] (-) TimerEvent: {}
+[13.300891] (-) TimerEvent: {}
+[13.401446] (-) TimerEvent: {}
+[13.502090] (-) TimerEvent: {}
+[13.602821] (-) TimerEvent: {}
+[13.703639] (-) TimerEvent: {}
+[13.804222] (-) TimerEvent: {}
+[13.904744] (-) TimerEvent: {}
+[14.005435] (-) TimerEvent: {}
+[14.105975] (-) TimerEvent: {}
+[14.206545] (-) TimerEvent: {}
+[14.307323] (-) TimerEvent: {}
+[14.408228] (-) TimerEvent: {}
+[14.508777] (-) TimerEvent: {}
+[14.609332] (-) TimerEvent: {}
+[14.709801] (-) TimerEvent: {}
+[14.810355] (-) TimerEvent: {}
+[14.911058] (-) TimerEvent: {}
+[15.011853] (-) TimerEvent: {}
+[15.112939] (-) TimerEvent: {}
+[15.213755] (-) TimerEvent: {}
+[15.314290] (-) TimerEvent: {}
+[15.414936] (-) TimerEvent: {}
+[15.515633] (-) TimerEvent: {}
+[15.616392] (-) TimerEvent: {}
+[15.717274] (-) TimerEvent: {}
+[15.734312] (final_challenge) StdoutLine: {'line': b'running develop\n'}
+[15.817414] (-) TimerEvent: {}
+[15.917946] (-) TimerEvent: {}
+[16.018429] (-) TimerEvent: {}
+[16.118969] (-) TimerEvent: {}
+[16.219497] (-) TimerEvent: {}
+[16.320205] (-) TimerEvent: {}
+[16.420714] (-) TimerEvent: {}
+[16.521347] (-) TimerEvent: {}
+[16.622051] (-) TimerEvent: {}
+[16.624642] (final_challenge) StdoutLine: {'line': b'running egg_info\n'}
+[16.626280] (final_challenge) StdoutLine: {'line': b'writing final_challenge.egg-info/PKG-INFO\n'}
+[16.631148] (final_challenge) StdoutLine: {'line': b'writing dependency_links to final_challenge.egg-info/dependency_links.txt\n'}
+[16.636447] (final_challenge) StdoutLine: {'line': b'writing entry points to final_challenge.egg-info/entry_points.txt\n'}
+[16.639689] (final_challenge) StdoutLine: {'line': b'writing requirements to final_challenge.egg-info/requires.txt\n'}
+[16.643156] (final_challenge) StdoutLine: {'line': b'writing top-level names to final_challenge.egg-info/top_level.txt\n'}
+[16.722200] (-) TimerEvent: {}
+[16.817355] (final_challenge) StdoutLine: {'line': b"reading manifest file 'final_challenge.egg-info/SOURCES.txt'\n"}
+[16.822275] (-) TimerEvent: {}
+[16.884028] (final_challenge) StdoutLine: {'line': b"writing manifest file 'final_challenge.egg-info/SOURCES.txt'\n"}
+[16.922486] (-) TimerEvent: {}
+[17.023266] (-) TimerEvent: {}
+[17.123944] (-) TimerEvent: {}
+[17.224510] (-) TimerEvent: {}
+[17.307577] (final_challenge) StdoutLine: {'line': b'running build_ext\n'}
+[17.313577] (final_challenge) StdoutLine: {'line': b'Creating /home/racecar/racecar_ws/src/final_challenge2024/install/final_challenge/lib/python3.8/site-packages/final-challenge.egg-link (link to .)\n'}
+[17.324669] (-) TimerEvent: {}
+[17.345093] (final_challenge) StdoutLine: {'line': b'Installing planner script to /home/racecar/racecar_ws/src/final_challenge2024/install/final_challenge/lib/final_challenge\n'}
+[17.370747] (final_challenge) StdoutLine: {'line': b'\n'}
+[17.371798] (final_challenge) StdoutLine: {'line': b'Installed /home/racecar/racecar_ws/src/final_challenge2024/build/final_challenge\n'}
+[17.374121] (final_challenge) StdoutLine: {'line': b'running install_data\n'}
+[17.424802] (-) TimerEvent: {}
+[17.474880] (final_challenge) CommandEnded: {'returncode': 0}
+[17.524912] (-) TimerEvent: {}
+[17.625395] (-) TimerEvent: {}
+[17.725996] (-) TimerEvent: {}
+[17.826769] (-) TimerEvent: {}
+[17.927321] (-) TimerEvent: {}
+[18.028089] (-) TimerEvent: {}
+[18.129548] (-) TimerEvent: {}
+[18.229759] (final_challenge) JobEnded: {'identifier': 'final_challenge', 'rc': 0}
+[18.236538] (-) TimerEvent: {}
+[18.236779] (-) EventReactorShutdown: {}

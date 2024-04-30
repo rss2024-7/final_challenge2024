@@ -13,7 +13,7 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name + '/launch', ['launch/planner.launch.xml']),
-        (os.path.join('share', package_name, 'config', 'sim'), glob.glob('config/*.yaml')),
+        (os.path.join('share', package_name, 'config'), glob.glob('config/*.yaml')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -24,6 +24,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'planner = final_challenge.planner:main',
         ],
     },
 )

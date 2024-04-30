@@ -1,3 +1,3 @@
 [console_scripts]
-
+planner = final_challenge.planner:main
 

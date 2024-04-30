@@ -1,6 +1,7 @@
 package.xml
 setup.cfg
 setup.py
+config/sim_config.yaml
 final_challenge/__init__.py
 final_challenge.egg-info/PKG-INFO
 final_challenge.egg-info/SOURCES.txt

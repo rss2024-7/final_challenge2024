@@ -1,0 +1,17 @@
+[11.931s] Invoking command in '/home/racecar/racecar_ws/src/final_challenge2024/build/final_challenge': PYTHONPATH=/home/racecar/racecar_ws/src/final_challenge2024/build/final_challenge/prefix_override:/home/racecar/racecar_ws/src/final_challenge2024/install/final_challenge/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/racecar/racecar_ws/src/final_challenge2024/build/final_challenge/build --no-deps install_data
+[16.379s] running develop
+[17.370s] running egg_info
+[17.372s] writing final_challenge.egg-info/PKG-INFO
+[17.376s] writing dependency_links to final_challenge.egg-info/dependency_links.txt
+[17.380s] writing entry points to final_challenge.egg-info/entry_points.txt
+[17.383s] writing requirements to final_challenge.egg-info/requires.txt
+[17.385s] writing top-level names to final_challenge.egg-info/top_level.txt
+[17.538s] reading manifest file 'final_challenge.egg-info/SOURCES.txt'
+[17.592s] writing manifest file 'final_challenge.egg-info/SOURCES.txt'
+[18.023s] running build_ext
+[18.038s] Creating /home/racecar/racecar_ws/src/final_challenge2024/install/final_challenge/lib/python3.8/site-packages/final-challenge.egg-link (link to .)
+[18.056s] 
+[18.057s] Installed /home/racecar/racecar_ws/src/final_challenge2024/build/final_challenge
+[18.059s] running install_data
+[18.111s] copying config/sim_config.yaml -> /home/racecar/racecar_ws/src/final_challenge2024/install/final_challenge/share/final_challenge/config
+[18.157s] Invoked command in '/home/racecar/racecar_ws/src/final_challenge2024/build/final_challenge' returned '0': PYTHONPATH=/home/racecar/racecar_ws/src/final_challenge2024/build/final_challenge/prefix_override:/home/racecar/racecar_ws/src/final_challenge2024/install/final_challenge/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/racecar/racecar_ws/src/final_challenge2024/build/final_challenge/build --no-deps install_data

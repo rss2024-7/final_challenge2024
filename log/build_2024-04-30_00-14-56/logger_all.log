@@ -110,3 +110,48 @@
 [48.247s] INFO:colcon.colcon_core.task.python.build:Building Python package in '/home/racecar/racecar_ws/src/final_challenge2024/final_challenge'
 [48.534s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
 [48.535s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[71.051s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/racecar/racecar_ws/src/final_challenge2024/build/final_challenge': PYTHONPATH=/home/racecar/racecar_ws/src/final_challenge2024/build/final_challenge/prefix_override:/home/racecar/racecar_ws/src/final_challenge2024/install/final_challenge/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/racecar/racecar_ws/src/final_challenge2024/build/final_challenge/build --no-deps install_data
+[91.350s] Level 1:colcon.colcon_core.shell:create_environment_hook('final_challenge', 'pythonpath_develop')
+[91.354s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/racecar/racecar_ws/src/final_challenge2024/build/final_challenge' returned '0': PYTHONPATH=/home/racecar/racecar_ws/src/final_challenge2024/build/final_challenge/prefix_override:/home/racecar/racecar_ws/src/final_challenge2024/install/final_challenge/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/racecar/racecar_ws/src/final_challenge2024/build/final_challenge/build --no-deps install_data
+[91.626s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/racecar/racecar_ws/src/final_challenge2024/build/final_challenge/share/final_challenge/hook/pythonpath_develop.ps1'
+[91.673s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/racecar/racecar_ws/src/final_challenge2024/build/final_challenge/share/final_challenge/hook/pythonpath_develop.dsv'
+[91.708s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/racecar/racecar_ws/src/final_challenge2024/build/final_challenge/share/final_challenge/hook/pythonpath_develop.sh'
+[92.238s] Level 1:colcon.colcon_core.environment:checking '/home/racecar/racecar_ws/src/final_challenge2024/install/final_challenge' for CMake module files
+[92.363s] Level 1:colcon.colcon_core.environment:checking '/home/racecar/racecar_ws/src/final_challenge2024/install/final_challenge' for CMake config files
+[92.598s] Level 1:colcon.colcon_core.environment:checking '/home/racecar/racecar_ws/src/final_challenge2024/install/final_challenge/lib'
+[92.611s] Level 1:colcon.colcon_core.environment:checking '/home/racecar/racecar_ws/src/final_challenge2024/install/final_challenge/bin'
+[92.614s] Level 1:colcon.colcon_core.environment:checking '/home/racecar/racecar_ws/src/final_challenge2024/install/final_challenge/lib/pkgconfig/final_challenge.pc'
+[92.618s] Level 1:colcon.colcon_core.environment:checking '/home/racecar/racecar_ws/src/final_challenge2024/install/final_challenge/lib/python3.8/site-packages'
+[92.624s] Level 1:colcon.colcon_core.shell:create_environment_hook('final_challenge', 'pythonpath')
+[92.875s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/racecar/racecar_ws/src/final_challenge2024/install/final_challenge/share/final_challenge/hook/pythonpath.ps1'
+[92.915s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/racecar/racecar_ws/src/final_challenge2024/install/final_challenge/share/final_challenge/hook/pythonpath.dsv'
+[92.951s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/racecar/racecar_ws/src/final_challenge2024/install/final_challenge/share/final_challenge/hook/pythonpath.sh'
+[92.987s] Level 1:colcon.colcon_core.environment:checking '/home/racecar/racecar_ws/src/final_challenge2024/install/final_challenge/bin'
+[92.990s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(final_challenge)
+[93.287s] INFO:colcon.colcon_core.shell:Creating package script '/home/racecar/racecar_ws/src/final_challenge2024/install/final_challenge/share/final_challenge/package.ps1'
+[93.341s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/racecar/racecar_ws/src/final_challenge2024/install/final_challenge/share/final_challenge/package.dsv'
+[93.385s] INFO:colcon.colcon_core.shell:Creating package script '/home/racecar/racecar_ws/src/final_challenge2024/install/final_challenge/share/final_challenge/package.sh'
+[93.429s] INFO:colcon.colcon_core.shell:Creating package script '/home/racecar/racecar_ws/src/final_challenge2024/install/final_challenge/share/final_challenge/package.bash'
+[93.470s] INFO:colcon.colcon_core.shell:Creating package script '/home/racecar/racecar_ws/src/final_challenge2024/install/final_challenge/share/final_challenge/package.zsh'
+[93.507s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/racecar/racecar_ws/src/final_challenge2024/install/final_challenge/share/colcon-core/packages/final_challenge)
+[93.532s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:closing loop
+[93.533s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:loop closed
+[93.534s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete finished with '0'
+[93.535s] DEBUG:colcon.colcon_core.event_reactor:joining thread
+[94.197s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.notify_send': Could not find 'notify-send'
+[94.198s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.terminal_notifier': Not used on non-Darwin systems
+[94.198s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.win32': Not used on non-Windows systems
+[94.199s] INFO:colcon.colcon_notification.desktop_notification:Sending desktop notification using 'notify2'
+[97.677s] DEBUG:colcon.colcon_notification.desktop_notification.notify2:Failed to initialize notify2: org.freedesktop.DBus.Error.Spawn.ExecFailed: /usr/bin/dbus-launch terminated abnormally with the following error: Autolaunch error: X11 initialization failed.
+
+[97.679s] DEBUG:colcon.colcon_core.event_reactor:joined thread
+[97.949s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/racecar/racecar_ws/src/final_challenge2024/install/local_setup.ps1'
+[97.963s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/racecar/racecar_ws/src/final_challenge2024/install/_local_setup_util_ps1.py'
+[97.982s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/racecar/racecar_ws/src/final_challenge2024/install/setup.ps1'
+[98.495s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/racecar/racecar_ws/src/final_challenge2024/install/local_setup.sh'
+[98.516s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/racecar/racecar_ws/src/final_challenge2024/install/_local_setup_util_sh.py'
+[98.537s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/racecar/racecar_ws/src/final_challenge2024/install/setup.sh'
+[99.138s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/racecar/racecar_ws/src/final_challenge2024/install/local_setup.bash'
+[99.154s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/racecar/racecar_ws/src/final_challenge2024/install/setup.bash'
+[99.829s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/racecar/racecar_ws/src/final_challenge2024/install/local_setup.zsh'
+[99.856s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/racecar/racecar_ws/src/final_challenge2024/install/setup.zsh'
