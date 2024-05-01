@@ -102,7 +102,8 @@ def get_target_pix(src):
               #   cv.line(cdstP, (l[0], l[1]), (l[2], l[3]), (0,0,255), 3, cv.LINE_AA)
             else:
               slope = np.inf
-            slopes.append([i, abs(slope)])
+            # slopes.append([i, abs(slope)])
+            slopes.append([i, slope])
     slopes = np.array(slopes)
     # sorted = np.flip(np.sort(slopes))  # sorts slopes in descending order
     sorted = slopes[slopes[:, 1].argsort()]
@@ -112,21 +113,21 @@ def get_target_pix(src):
     if linesP is not None:
         # get two steepest lines
         l1 = linesP[int(sorted[-1][0])][0]
-        l2 = linesP[int(sorted[-2][0])][0]
+        l2 = linesP[int(sorted[0][0])][0]
         cv.line(cdstP, (l1[0], l1[1]), (l1[2], l1[3]), (0,0,255), 3, cv.LINE_AA)
         cv.line(cdstP, (l2[0], l2[1]), (l2[2], l2[3]), (0,0,255), 3, cv.LINE_AA)
         avgx = (l1[2] + l2[0])//2
         # avgy = (l1[3] + l2[1])//2
 
         # draw center pixel on cropped img: using half of cropped height as lookahead dist
-        cv.circle(cdstP, (avgx, hc//2), radius=4, color=(255, 0, 0), thickness=-1)
+        # cv.circle(cdstP, (avgx, hc//2), radius=4, color=(255, 0, 0), thickness=-1)
         
         # draw detected lines + center pixel on src img: add offset from cropping
-        cv.circle(src, (avgx + ul_x, hc//2 + ul_y), radius=4, color=(255, 0, 0), thickness=-1)
-        cv.line(src, (l1[0] + ul_x, l1[1] + ul_y), (l1[2] + ul_x, l1[3] + ul_y), (0,0,255), 3, cv.LINE_AA)
-        cv.line(src, (l2[0] + ul_x, l2[1] + ul_y), (l2[2] + ul_x, l2[3] + ul_y), (0,0,255), 3, cv.LINE_AA)
+        # cv.circle(src, (avgx + ul_x, hc//2 + ul_y), radius=4, color=(255, 0, 0), thickness=-1)
+        # cv.line(src, (l1[0] + ul_x, l1[1] + ul_y), (l1[2] + ul_x, l1[3] + ul_y), (0,0,255), 3, cv.LINE_AA)
+        # cv.line(src, (l2[0] + ul_x, l2[1] + ul_y), (l2[2] + ul_x, l2[3] + ul_y), (0,0,255), 3, cv.LINE_AA)
         
         # draw rectangle to show cropped img
-        cv.rectangle(src, (ul_x,ul_y), (br_x, br_y), (0, 255, 0), 2)
+        # cv.rectangle(src, (ul_x,ul_y), (br_x, br_y), (0, 255, 0), 2)
 
         return (avgx + ul_x, hc//2 + ul_y)
