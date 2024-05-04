@@ -1,0 +1,10 @@
+<launch>
+    <node pkg="city" exec="trajectory_follower" name="trajectory_follower" output="screen">
+        <param from="$(find-pkg-share city)/config/real_config.yaml"/>
+        <param name="lane" value="$(find-pkg-share path_planning)/example_trajectories/full-lane.traj"/>
+    </node>
+    <node pkg="localization" exec="localize" name="localization" output="screen">
+        <param from="$(find-pkg-share city)/config/pf_config.yaml"/>
+        <param name="lane" value="$(find-pkg-share path_planning)/example_trajectories/full-lane.traj"/>
+    </node>
+</launch>

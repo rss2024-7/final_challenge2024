@@ -1,0 +1,10 @@
+planner:
+  ros__parameters:
+    odom_topic: "/pf/pose/odom"
+    map_topic: "/map"
+    scan_topic: "/scan"
+    initial_pose_topic: "/initialpose"
+trajectory_follower:
+  ros__parameters:
+    odom_topic: "/odom"
+    drive_topic: "/vesc/input/high_level/ackermann_cmd"
