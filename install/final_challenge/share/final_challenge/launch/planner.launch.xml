@@ -1,5 +1,0 @@
-<launch>
-    <node pkg="final_challenge" exec="planner" name="planner" output="screen">
-        <param from="$(find-pkg-share final_challenge)/config/sim_config.yaml"/>
-    </node>
-</launch>
