@@ -1,4 +1,4 @@
-planner:
+trajectory_planner:
   ros__parameters:
     odom_topic: "/odom"
     map_topic: "/map"

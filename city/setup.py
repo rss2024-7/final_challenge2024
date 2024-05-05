@@ -14,7 +14,9 @@ setup(
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name + '/launch', ['launch/drive.launch.xml']),
         ('share/' + package_name + '/launch', ['launch/sim_drive.launch.xml']),
-        ('share/path_planning/maps', glob.glob(os.path.join('maps', '*'))),
+        ('share/' + package_name + '/launch', ['launch/sim_follow.launch.xml']),
+        ('share/city/maps', glob.glob(os.path.join('maps', '*'))),
+        ('share/city/example_trajectories', glob.glob(os.path.join('example_trajectories', '*.traj'))),
         (os.path.join('share', package_name, 'config'), glob.glob('config/*.yaml')),
     ],
     install_requires=['setuptools'],
@@ -27,6 +29,7 @@ setup(
     entry_points={
         'console_scripts': [
             'trajectory_follower = city.trajectory_follower:main',
+            'trajectory_planner = city.trajectory_planner:main',
         ],
     },
 )

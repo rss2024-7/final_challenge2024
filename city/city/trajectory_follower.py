@@ -4,7 +4,7 @@ from geometry_msgs.msg import PoseArray, PointStamped, PoseWithCovarianceStamped
 from nav_msgs.msg import Odometry
 from rclpy.node import Node
 from visualization_msgs.msg import Marker
-from std_msgs.msg import Float32, ColorRGBA
+from std_msgs.msg import Float32, ColorRGBA, Bool
 from wall_follower.visualization_tools import VisualizationTools
 import numpy as np
 
@@ -33,10 +33,6 @@ class PurePursuit(Node):
 
         self.lane_offset = 0.4
 
-        self.endzone_lower = np.array([[-25, -5],
-                                       [-60, -5]])
-        self.endzone_upper = np.array([[-16, 2],
-                                       [-51, 2]])
 
         self.lookahead = 1  # FILL IN #
         self.speed = 4.0  # FILL IN #
@@ -51,6 +47,8 @@ class PurePursuit(Node):
         
         # the angle to target s.t. the lookahead will be at its minimum
         self.min_lookahead_angle = np.deg2rad(90) 
+        
+        self.max_steer = 0.34
 
         self.trajectory = LineTrajectory("/followed_trajectory")
 
@@ -79,7 +77,13 @@ class PurePursuit(Node):
         self.target_pub = self.create_publisher(Marker, "/target_point", 1)
         self.radius_pub = self.create_publisher(Marker, "/radius", 1)
 
-        self.max_steer = 0.34
+        self.turn_success_pub = self.create_publisher(Bool, "/turn_outcome", 1)
+
+        self.turn_sub = self.create_subscription(Float32,
+                                            "/turnaround",
+                                            self.turnaround_callback,
+                                            1)
+
 
         self.error_pub = self.create_publisher(Float32, "/error", 1)
         self.num_dist = 0
@@ -148,8 +152,7 @@ class PurePursuit(Node):
 
         return np.any(x_in & y_in)
 
-    def in_endzone(self, x, y):
-        return self.in_bounds(self.endzone_lower, self.endzone_upper, x, y)
+
 
 
     def point_callback(self, point_msg):
@@ -164,10 +167,43 @@ class PurePursuit(Node):
 
         self.num_shells += 1
 
+    def turnaround_callback(self, msg):
+        if self.follow_shell:
+            turn_msg = Bool()
+            turn_msg.data = False
+            self.turn_success_pub.publish(turn_msg) 
+            return
+        self.lane_traj.points.reverse()
+
+        # 3-Point Turn
+        drive_msg = AckermannDriveStamped()
+
+        drive_msg.drive.speed = 1.0
+        drive_msg.drive.steering_angle = self.max_steer
+        self.drive_pub.publish(drive_msg)
+        time.sleep(1.25)
+
+        drive_msg.drive.speed = -1.0
+        drive_msg.drive.steering_angle = -self.max_steer
+        self.drive_pub.publish(drive_msg)
+        time.sleep(0.75)
+
+        drive_msg.drive.speed = 1.0
+        drive_msg.drive.steering_angle = self.max_steer
+        self.drive_pub.publish(drive_msg)
+        time.sleep(.75)
+
+        turn_msg = Bool()
+        turn_msg.data = True
+        self.turn_success_pub.publish(turn_msg)
+
+
 
     def pose_callback(self, odometry_msg):
 
-        # if self.num_shells < 3: return
+        # self.get_logger().info(f"{self.num_shells=}")
+
+        if self.num_shells < 3: return
 
         # process trajectory points into np arrays
         points = np.array(self.lane_traj.points)
@@ -183,20 +219,42 @@ class PurePursuit(Node):
         car_pos_x = odometry_msg.pose.pose.position.x
         car_pos_y = odometry_msg.pose.pose.position.y
 
-        # IN END ZONE, U TURN
-        car_in_endzone = self.in_endzone(car_pos_x, car_pos_y)
-        if car_in_endzone and not self.car_in_endzone:
-            self.lane_traj.points.reverse()
-            drive_msg = AckermannDriveStamped()
-            drive_msg.drive.speed = 1.0
-            steer_angle = self.max_steer
-            drive_msg.drive.steering_angle = steer_angle
-            self.drive_pub.publish(drive_msg)
-            time.sleep(2)
-            self.car_in_endzone = True
-            return
-        if not car_in_endzone and self.car_in_endzone:
-            self.car_in_endzone = False
+        # # IN END ZONE, U TURN
+        # car_in_endzone = self.in_endzone(car_pos_x, car_pos_y)
+        # if car_in_endzone and not self.car_in_endzone:
+        #     self.lane_traj.points.reverse()
+
+        #     # # U - TURN
+        #     # drive_msg = AckermannDriveStamped()
+        #     # drive_msg.drive.speed = 1.0
+        #     # steer_angle = self.max_steer
+        #     # drive_msg.drive.steering_angle = steer_angle
+        #     # self.drive_pub.publish(drive_msg)
+        #     # time.sleep(2)
+
+
+        #     # 3-Point Turn
+        #     drive_msg = AckermannDriveStamped()
+
+        #     drive_msg.drive.speed = 1.0
+        #     drive_msg.drive.steering_angle = self.max_steer
+        #     self.drive_pub.publish(drive_msg)
+        #     time.sleep(1.25)
+
+        #     drive_msg.drive.speed = -1.0
+        #     drive_msg.drive.steering_angle = -self.max_steer
+        #     self.drive_pub.publish(drive_msg)
+        #     time.sleep(0.75)
+
+        #     drive_msg.drive.speed = 1.0
+        #     drive_msg.drive.steering_angle = self.max_steer
+        #     self.drive_pub.publish(drive_msg)
+        #     time.sleep(.75)
+
+        #     self.car_in_endzone = True
+        #     return
+        # if not car_in_endzone and self.car_in_endzone:
+        #     self.car_in_endzone = False
 
         car_angle = 2 * np.arctan2(odometry_msg.pose.pose.orientation.z, odometry_msg.pose.pose.orientation.w)
 
@@ -310,9 +368,9 @@ class PurePursuit(Node):
 
         drive_msg = AckermannDriveStamped()
         drive_msg.drive.speed = -1.0
-        drive_msg.drive.steering_angle = angle
+        drive_msg.drive.steering_angle = np.sign(angle) * self.max_steer
         self.drive_pub.publish(drive_msg)
-        time.sleep(0.5)
+        time.sleep(self.wheelbase_length * np.abs(angle) / np.tan(self.max_steer))
 
         # self.trajectory.save("current_trajectory.traj")
 

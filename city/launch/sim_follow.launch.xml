@@ -1,0 +1,6 @@
+<launch>
+    <node pkg="city" exec="trajectory_follower" name="trajectory_follower" output="screen">
+        <param from="$(find-pkg-share city)/config/sim_config.yaml"/>
+        <param name="lane" value="$(find-pkg-share city)/example_trajectories/full-lane.traj"/>
+    </node>
+</launch>

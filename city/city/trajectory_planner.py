@@ -8,7 +8,7 @@ from nav_msgs.msg import OccupancyGrid, Odometry
 from .utils import LineTrajectory
 from .rrt import RRT
 
-from std_msgs.msg import ColorRGBA
+from std_msgs.msg import ColorRGBA, Float32, Bool
 
 from ament_index_python.packages import get_package_share_directory
 
@@ -35,10 +35,29 @@ class PathPlan(Node):
         self.map_topic = self.get_parameter('map_topic').get_parameter_value().string_value
         self.initial_pose_topic = self.get_parameter('initial_pose_topic').get_parameter_value().string_value
 
-        self.shell_radius = 10  # meters
+        self.shell_radius = 5  # meters
         self.dist_from_shell = 0.5  # meters
 
         self.shell_paths = []
+
+        self.turn_zone_lower = np.array([[-16, 23], # narrow hallway 1
+                                         [-22, 29], # narrow hallway 2
+                                         [-49, 30], # between narrow hallway and vending machine hallway
+                                         [-58, 28], # between vending machine hallway crosswalks
+                                         [-58, 5], # vending machine hallway
+                                        ])
+        self.turn_zone_upper = np.array([[-11, 28], # narrow hallway 1
+                                         [-19, 32], # narrow hallway 2
+                                         [-34, 37], # between narrow hallway and vending machine hallway
+                                         [-51, 32], # between vending machine hallway crosswalks
+                                         [-51, 24], # vending machine hallway
+                                        ])
+        
+        self.endzone_lower = np.array([[-25, -5],
+                                       [-60, -5],])
+        self.endzone_upper = np.array([[-16, 2],
+                                       [-51, 2],])
+
 
         self.map_sub = self.create_subscription(
             OccupancyGrid,
@@ -154,56 +173,66 @@ class PathPlan(Node):
 
         self.RRT_planner = RRT(self.map_info)
 
+        self.shell_pub = self.create_publisher(Marker, "/shell_point", 3)
+        self.shell_near_pub = self.create_publisher(Marker, "/shell_near_point", 3)
+
+        self.turn_pub = self.create_publisher(
+            Float32,
+            "/turnaround",
+            1
+        )
+        self.turn_success_sub = self.create_subscription(
+            Bool,
+            "/turn_outcome",
+            self.turn_success_callback,
+            1
+        )
+
+        self.initialized = False
+
+        self.turning = False
+
+        self.car_side = 75
+
+        self.car_in_endzone = True
+
         self.get_logger().info("------READY-----")
 
-    def edit_map(self, p1, p2): #where p1 and p2 are adjacent points in .traj
-        vec = p2-p1
-        dist = np.linalg.norm(vec)
-        num_intervals = int(dist/0.01)
-
-        for interval in range(1,num_intervals):
-            coord = p1 + interval/num_intervals * vec
-            pixel = self.real_to_pixel(coord)
-            self.map_data[self.index_from_pixel(pixel)] = 100
-
-    def map_cb(self, msg):
-        return
-        self.map = msg
-        timestamp = msg.header.stamp
-        frame_id = msg.header.frame_id
-        self.map_width = msg.info.width
-        self.map_height = msg.info.height
-        self.map_resolution = msg.info.resolution  # resolution in meters/cell
-        self.map_data = msg.data
-
-        points = self.lane_traj.points
-        for i in range(len(points) - 1):
-            self.edit_map(np.array(points[i]), np.array(points[i + 1]))
-
-        # self.map_data = self.padded_map_grid
-        self.map_orientation = msg.info.origin.orientation
-        self.map_position = msg.info.origin.position
-        self.map_info = (self.map_data, self.map_width, self.map_height, self.map_resolution)
-        
-        self.RRT_planner = RRT(self.map_info)
-
-        self.get_logger().info("map height: " + str(self.map_height))
-        self.get_logger().info("map width: " + str(self.map_width))
-        self.get_logger().info("map data length: " + str(len(self.map_data)))
-        self.get_logger().info("map [0][0]: " + str(self.pixel_to_real([0,0])))
-        self.get_logger().info("map [0][map width]: " + str(self.pixel_to_real([0,self.map_width])))
-        self.get_logger().info("map [map height][0]: " + str(self.pixel_to_real([self.map_height,0])))
-        self.get_logger().info("map [map height][map width]: " + str(self.pixel_to_real([self.map_height,self.map_width])))
-        self.get_logger().info("origin (25.9, 48.5) to pixel: " + str(self.real_to_pixel([25.9, 48.5])))
 
 
 
+    def in_bounds(self, lower_bounds, upper_bounds, x, y):
+        x_in = (lower_bounds[:, 0] <= x) & (x <= upper_bounds[:, 0])
+        y_in = (lower_bounds[:, 1] <= y) & (y <= upper_bounds[:, 1])
 
+        return np.any(x_in & y_in)
 
-        # self.get_logger().info("orientation: ", str(self.map_orientation))
-        # self.get_logger().info("position: ", str(self.map_orientation))
-        # self.get_logger().info("map: " + np.array2string(self.map_data))
+    def in_turn_zone(self, x, y):
+        return self.in_bounds(self.turn_zone_lower, self.turn_zone_upper, x, y)
+    
+    def in_endzone(self, x, y):
+        return self.in_bounds(self.endzone_lower, self.endzone_upper, x, y)
+
+    def turn_success_callback(self, msg):
+        if msg.data:
+            self.get_logger().info("switch")
+            if self.car_side == 75:
+                self.car_side = 25
+            else:
+                self.car_side = 75
+            # self.get_logger().info(f"{self.car_side}")
+        self.turning = False
+    def turn_around(self):
+        if self.turning: return
+        turn_msg = Float32()
+        turn_msg.data = 420.69
+        self.turn_pub.publish(turn_msg)
+        self.turning = True
+        # time.sleep(5)
+
     def shell_path(self, msg):
+        if not self.initialized: return
+
         car_pos_x = msg.pose.pose.position.x
         car_pos_y = msg.pose.pose.position.y
 
@@ -211,17 +240,61 @@ class PathPlan(Node):
 
         # self.get_logger().info(f'{self.shell_points=}')
 
+        if self.in_endzone(car_pos_x, car_pos_y):
+            if self.car_in_endzone: return
+            self.car_in_endzone = True
+            self.turn_around()
+            return
+        self.car_in_endzone = False
+
         if len(self.shell_points) == 0: 
+            if not self.in_turn_zone(car_pos_x, car_pos_y): return
+
+            # turn back towards start point
+            car_side = self.car_side
+            if car_side == 75:
+                self.turn_around()
+
             return
         
         # self.get_logger().info(f'{self.shell_points[0]}')
+        shell_point, shell_side = self.shell_points[0]
 
-        if self.shell_points[0][1] != self.real_to_map(car_pos) \
-            or np.linalg.norm(car_pos - self.shell_points[0][0]) > self.shell_radius:
+        shell_side = int(shell_side)
+        car_side = self.car_side
+
+        points = np.array(self.lane_traj.points)
+        traj_x = points[:, 0]
+        traj_y = points[:, 1]
+            
+        car_index = self.find_closest_segment(traj_x, traj_y, car_pos_x, car_pos_y)
+        shell_index = self.find_closest_segment(traj_x, traj_y, shell_point[0], shell_point[1])
+        
+        if shell_side != car_side:
+            if car_side == 50: return
+            if not self.in_turn_zone(car_pos_x, car_pos_y): return
+
+            # self.get_logger().info(f"{car_index=}, {shell_index=}, {car_side=}, {shell_side=}")
+            # self.get_logger().info(f"{(car_index > shell_index)=}, {(car_side > shell_side)=}")
+            if car_index == shell_index: return
+            if (car_index > shell_index) == (car_side > shell_side):
+                # self.get_logger().info("Turn")
+                self.turn_around()
+
+            return
+        
+        if car_side == 25 and shell_index > car_index:
+            self.turn_around()
+            return
+        if car_side == 75 and shell_index < car_index:
+            self.turn_around()
+            return       
+
+        
+        if np.linalg.norm(car_pos - self.shell_points[0][0]) > self.shell_radius:
             return
 
         # self.get_logger().info("planning shell path...")
-        point, side = self.shell_points[0]
         # path = self.shell_paths.pop(0)
 
         # path = [tuple(row) for row in path]
@@ -236,7 +309,7 @@ class PathPlan(Node):
 
         self.trajectory.clear()
 
-        path = self.RRT_planner.plan_straight_line(car_pos, point)
+        path = self.RRT_planner.plan_straight_line(car_pos, shell_point)
 
         if path is None:
             return
@@ -299,6 +372,11 @@ class PathPlan(Node):
         side = self.real_to_map(near_point)
         self.shell_points.append((near_point, side))
 
+        if len(self.shell_points) >= 3: self.initialized = True
+
+        self.pub_point(self.shell_pub, (0.0, 1.0, 0.0), (point_msg.point.x, point_msg.point.y))
+        self.pub_point(self.shell_near_pub, (1.0, 0.0, 0.0), near_point)
+
     def plan_path(self, start_point, end_point, map):
 
         self.trajectory.clear()
@@ -332,10 +410,8 @@ class PathPlan(Node):
 
         # self.shell_paths.append(self.RRT_planner.plan_path(start, near_point))
 
-        # self.pub_point(self.shell_pub, (0.0, 1.0, 0.0), (point_msg.point.x, point_msg.point.y))
-        # self.pub_point(self.shell_near_pub, (1.0, 0.0, 0.0), near_point)
 
-    def find_closest_segment(self, x, y, car_x, car_y, side):
+    def find_closest_segment(self, x, y, car_x, car_y, side=None):
         """Finds closest line segment in trajectory and returns its index.
             Code based on https://stackoverflow.com/questions/849211/shortest-distance-between-a-point-and-a-line-segment/1501725#1501725
             and modified to use numpy arrays for better speed
@@ -348,7 +424,7 @@ class PathPlan(Node):
         Returns:
             int: index of start of closest line segment in the trajectory arrays
         """
-        if side == 25:
+        if side is not None and side == 25:
             x = np.flip(x)
             y = np.flip(y)
         points = np.vstack((x, y)).T
@@ -513,7 +589,45 @@ class PathPlan(Node):
         self.debug_pub.publish(marker_array)
         self.get_logger().info('points published')
 
+    def edit_map(self, p1, p2): #where p1 and p2 are adjacent points in .traj
+        vec = p2-p1
+        dist = np.linalg.norm(vec)
+        num_intervals = int(dist/0.01)
 
+        for interval in range(1,num_intervals):
+            coord = p1 + interval/num_intervals * vec
+            pixel = self.real_to_pixel(coord)
+            self.map_data[self.index_from_pixel(pixel)] = 100
+
+    def map_cb(self, msg):
+        return
+        self.map = msg
+        timestamp = msg.header.stamp
+        frame_id = msg.header.frame_id
+        self.map_width = msg.info.width
+        self.map_height = msg.info.height
+        self.map_resolution = msg.info.resolution  # resolution in meters/cell
+        self.map_data = msg.data
+
+        points = self.lane_traj.points
+        for i in range(len(points) - 1):
+            self.edit_map(np.array(points[i]), np.array(points[i + 1]))
+
+        # self.map_data = self.padded_map_grid
+        self.map_orientation = msg.info.origin.orientation
+        self.map_position = msg.info.origin.position
+        self.map_info = (self.map_data, self.map_width, self.map_height, self.map_resolution)
+        
+        self.RRT_planner = RRT(self.map_info)
+
+        self.get_logger().info("map height: " + str(self.map_height))
+        self.get_logger().info("map width: " + str(self.map_width))
+        self.get_logger().info("map data length: " + str(len(self.map_data)))
+        self.get_logger().info("map [0][0]: " + str(self.pixel_to_real([0,0])))
+        self.get_logger().info("map [0][map width]: " + str(self.pixel_to_real([0,self.map_width])))
+        self.get_logger().info("map [map height][0]: " + str(self.pixel_to_real([self.map_height,0])))
+        self.get_logger().info("map [map height][map width]: " + str(self.pixel_to_real([self.map_height,self.map_width])))
+        self.get_logger().info("origin (25.9, 48.5) to pixel: " + str(self.real_to_pixel([25.9, 48.5])))
 
 
 
