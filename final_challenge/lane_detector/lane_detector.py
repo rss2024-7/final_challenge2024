@@ -51,22 +51,30 @@ class LaneDetector(Node):
         image = self.bridge.imgmsg_to_cv2(image_msg, "bgr8")
         
 
-        x, y = get_target_pix(np.asarray(image[:, :]))
+        result = get_target_pix(np.asarray(image[:, :]))
 
-        image = cv.circle(image, (x, y), radius=4, color=(255, 0, 0), thickness=-1)
+        if result is not None:
+            pix, lines, offset = result
+            
+            pub = ConeLocationPixel()
+            pub.u = float(pix[0])
+            pub.v = float(pix[1])
+            self.cone_pub.publish(pub)
+
+            cv.circle(image, pix, radius = 4, color = (255, 0, 0), thickness = -1)
+            l1, l2 = lines
+            x, y = offset
+            if l1 is not None:
+                cv.line(image, (l1[0] + x, l1[1] + y), (l1[2] + x, l1[3] + y), (0,0,255), 3, cv.LINE_AA)
+            if l2 is not None:
+                cv.line(image, (l2[0] + x, l2[1] + y), (l2[2] + x, l2[3] + y), (0,0,255), 3, cv.LINE_AA)
 
         debug_msg = self.bridge.cv2_to_imgmsg(image, "bgr8")
-
-
-        pub = ConeLocationPixel()
-        pub.u = float(x)
-        pub.v = float(y)
-
+        self.debug_pub.publish(debug_msg)
+       
         # self.get_logger().info('u: "%s"' % u)
         # self.get_logger().info('v: "%s"' % v)
         
-        self.debug_pub.publish(debug_msg)
-        self.cone_pub.publish(pub)
 
 def main(args=None):
     rclpy.init(args=args)
