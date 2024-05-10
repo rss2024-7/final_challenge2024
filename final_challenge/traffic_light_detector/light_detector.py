@@ -8,7 +8,7 @@ import numpy as np
 from sensor_msgs.msg import Image
 from std_msgs.msg import Bool
 
-from .traffic_light import detect_red
+from .traffic_light import detect_red, detect_green
 
 
 class LightDetector(Node):
@@ -25,13 +25,13 @@ class LightDetector(Node):
         # Process image with CV Bridge
         image = self.bridge.imgmsg_to_cv2(img_msg, "bgr8")
 
-        boolean, cntr, rad = detect_red(np.asarray(image[:, :]))
+        boolean, cntr, rad = detect_green(np.asarray(image[:, :]))
 
         pub = Bool()
         pub.data = boolean
         self.publisher.publish(pub)
 
-        cv.circle(image, int(cntr), radius = int(rad), color = (255, 0, 0), thickness = -1)
+        cv.circle(image, (int(cntr[0]), int(cntr[1])), radius = int(rad), color = (255, 0, 0), thickness = -1)
 
         debug_msg = self.bridge.cv2_to_imgmsg(image, "bgr8")
         self.debug_pub.publish(debug_msg)
