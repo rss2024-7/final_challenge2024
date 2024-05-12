@@ -232,10 +232,10 @@ class RRT:
         pixel = np.floor(point)
 
         if column_row: # returns [v (column index), u (row index)] 
-            return np.array([pixel[0], pixel[1]])
+            return np.array([int(pixel[0]), int(pixel[1])])
         else:
             # returns [u (row index), v (column index)]
-            return np.array([pixel[1], pixel[0]])
+            return np.array([int(pixel[1]), int(pixel[0])])
         
     def real_to_pixels(self, pts):
         #takes in [x,y] real coordinate

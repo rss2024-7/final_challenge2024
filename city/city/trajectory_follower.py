@@ -19,19 +19,21 @@ class PurePursuit(Node):
     def __init__(self):
         super().__init__("trajectory_follower")
         self.declare_parameter('odom_topic', "default")
-        self.declare_parameter('drive_topic', "default")
+        self.declare_parameter('drive_topic', "/vesc/input/navigation")
 
         self.min_dist = 0
         self.car_pos = np.array([0, 0])
         self.car_angle = 0
+        self.real_car_angle_offset = - 0.03675
 
         self.odom_topic = self.get_parameter('odom_topic').get_parameter_value().string_value
         self.drive_topic = self.get_parameter('drive_topic').get_parameter_value().string_value
+        self.get_logger().info(f"{self.drive_topic=}")
 
         self.dist_from_shell = 0.5
         self.follow_shell = False
 
-        self.lane_offset = 0.4
+        self.lane_offset = 0.5
 
 
         self.lookahead = 1  # FILL IN #
@@ -43,7 +45,8 @@ class PurePursuit(Node):
         self.min_lookahead = 1.0
         self.max_lookahead = 2.0 
 
-        self.speed_to_lookahead = 1.0
+        self.speed_to_lookahead = 0.7
+        # self.speed_to_lookahead = 0.5
         
         # the angle to target s.t. the lookahead will be at its minimum
         self.min_lookahead_angle = np.deg2rad(90) 
@@ -73,11 +76,21 @@ class PurePursuit(Node):
                                             "/initialpose",
                                             self.init_callback,
                                             1)
+        self.stopsign_sub = self.create_subscription(Bool,
+                                        "/stopsign",
+                                        self.stopsign_callback,
+                                        1)
+        self.traffic_sub = self.create_subscription(Bool,
+                                "/light_detector",
+                                self.green_callback,
+                                1)
         
         self.target_pub = self.create_publisher(Marker, "/target_point", 1)
         self.radius_pub = self.create_publisher(Marker, "/radius", 1)
 
         self.turn_success_pub = self.create_publisher(Bool, "/turn_outcome", 1)
+
+        self.traffic_zone_pub = self.create_publisher(Bool, "/traffic_zone", 1)
 
         self.turn_sub = self.create_subscription(Float32,
                                             "/turnaround",
@@ -91,6 +104,8 @@ class PurePursuit(Node):
 
         self.initialized_traj = False
 
+        self.traffic_timer = 0
+
         self.declare_parameter("lane", "default")
         path = self.get_parameter("lane").get_parameter_value().string_value
         self.lane_traj = LineTrajectory(self, "/lane")
@@ -102,8 +117,7 @@ class PurePursuit(Node):
         # visualize the loaded trajectory
         self.lane_traj.publish_viz()
 
-        self.shell_pub = self.create_publisher(Marker, "/shell_point", 3)
-        self.shell_near_pub = self.create_publisher(Marker, "/shell_near_point", 3)
+        self.shell_collect_pub = self.create_publisher(Bool, "/shell_collected", 3)
 
         self.shell_traj = LineTrajectory(self, "/shellpath")
         self.shell_locations = []
@@ -111,6 +125,61 @@ class PurePursuit(Node):
         self.num_shells = 0
         
         self.car_in_endzone = True
+
+        self.reversing = False
+        self.reverse_start = None
+        self.reverse_time = None # seconds
+
+        self.turn_stage = 0
+        self.turn_stage_start = 0
+        self.turn_time = 0
+
+        self.parked = False
+        self.park_start = None
+        self.park_time = None 
+
+        self.hard_steering = False
+
+        self.pillar_zone_lower = np.array([[-19, 10]])
+        self.pillar_zone_upper = np.array([[-15, 11]])
+
+        # self.lane_traj.points.reverse()
+
+        self.traffic_locations = np.array([[-10.5, 16.6],
+                                            [-28.7, 34.1],
+                                            [-54.8, 24.6]])
+        self.traffic_zone_radius = 1.55 # meters
+        self.traffic_buffer_radius = 3.4
+        
+        self.is_near_traffic = False
+        self.traffic_stop = False
+
+        self.green_lights = False
+        self.is_in_buffer_zone = False
+        self.is_in_traffic_buffer_zone = False
+
+        self.traffic_cooldown = 0
+
+        self.go_timer = 0
+
+        self.jitter_count = 0
+        self.jitter_timer = 0
+
+        self.get_logger().info("Follower Ready") 
+    
+    def jitter_wheels(self):
+        if time.time() - self.jitter_timer > .5: 
+            self.jitter_count += 1
+            self.jitter_timer = time.time()
+
+        angle = self.max_steer
+        if self.jitter_count % 2 == 0: angle = - self.max_steer
+
+        drive_msg = AckermannDriveStamped()
+        drive_msg.drive.speed = 0.0
+        drive_msg.drive.steering_angle = angle + self.real_car_angle_offset
+        self.drive_pub.publish(drive_msg)
+
 
     def find_closest_point(self, x, y):
         points = np.array(self.lane_traj.points)
@@ -146,12 +215,48 @@ class PurePursuit(Node):
 
         return near_point
     
+    def in_buffer_zone(self, x, y):
+
+        pos = np.array([x, y])
+        delta = self.traffic_locations - pos
+        dists = np.linalg.norm(delta, axis=1)
+
+        close = (self.traffic_zone_radius <= dists) & (dists <= self.traffic_buffer_radius)
+
+        return np.any(close)
+    
+    def in_traffic_and_buffer_zone(self, x, y):
+
+        pos = np.array([x, y])
+        delta = self.traffic_locations - pos
+        dists = np.linalg.norm(delta, axis=1)
+
+        close = dists <= self.traffic_buffer_radius
+
+        in_zone = np.any(close)
+
+        zone_msg = Bool()
+        if in_zone:
+            zone_msg.data = True
+        else:
+            zone_msg.data = False
+        self.traffic_zone_pub.publish(zone_msg)
+
+        return in_zone
+
+    
     def in_bounds(self, lower_bounds, upper_bounds, x, y):
         x_in = (lower_bounds[:, 0] <= x) & (x <= upper_bounds[:, 0])
         y_in = (lower_bounds[:, 1] <= y) & (y <= upper_bounds[:, 1])
 
         return np.any(x_in & y_in)
 
+    def in_pillar_zone(self, x, y):
+        return self.in_bounds(self.pillar_zone_lower, self.pillar_zone_upper, x, y)
+    
+    def green_callback(self, msg):
+        if self.is_in_traffic_buffer_zone:
+            self.green_lights = self.green_lights or msg.data
 
 
 
@@ -167,44 +272,99 @@ class PurePursuit(Node):
 
         self.num_shells += 1
 
+    def reverse(self, reverse_time, angle=0.0):
+        self.hard_steering = True
+        time_start = time.time()
+        while time.time() - time_start < reverse_time + 0.2:
+            drive_msg = AckermannDriveStamped()
+            drive_msg.drive.speed = -1.0
+            drive_msg.drive.steering_angle = angle + self.real_car_angle_offset
+            self.drive_pub.publish(drive_msg)
+        
+        green_msg = Bool()
+        green_msg.data = True
+        self.green_callback(green_msg)
+        self.is_in_traffic_buffer_zone = False
+        self.is_in_buffer_zone = False
+        self.traffic_cooldown = 0
+        self.hard_steering = False
+
+    def park(self, park_time):
+        self.hard_steering = True
+        time_start = time.time()
+        while time.time() - time_start < park_time:
+            drive_msg = AckermannDriveStamped()
+            drive_msg.drive.speed = 0.0
+            self.drive_pub.publish(drive_msg)
+        self.hard_steering = False
+
+    def stopsign_callback(self, msg):
+        self.get_logger().info("stopping for stop sign...")
+        self.park(2)
+
     def turnaround_callback(self, msg):
+        self.hard_steering = True
         if self.follow_shell:
             turn_msg = Bool()
             turn_msg.data = False
             self.turn_success_pub.publish(turn_msg) 
             return
+
+        # Forward Left
+        time_start = time.time()
+        while time.time() - time_start < 1.0:
+            drive_msg = AckermannDriveStamped()
+            drive_msg.drive.speed = 1.0
+            drive_msg.drive.steering_angle = self.max_steer
+            self.drive_pub.publish(drive_msg)
+
+        # Back Right
+        time_start = time.time()
+        while time.time() - time_start < 1.25:
+            drive_msg = AckermannDriveStamped()
+            drive_msg.drive.speed = -1.0
+            drive_msg.drive.steering_angle = -self.max_steer + self.real_car_angle_offset
+            self.drive_pub.publish(drive_msg)
+
+        # Forward Left
+        time_start = time.time()
+        while time.time() - time_start < 0.5:
+            drive_msg = AckermannDriveStamped()
+            drive_msg.drive.speed = 1.0
+            drive_msg.drive.steering_angle = self.max_steer / 2
+            self.drive_pub.publish(drive_msg)
+
         self.lane_traj.points.reverse()
 
-        # 3-Point Turn
-        drive_msg = AckermannDriveStamped()
-
-        drive_msg.drive.speed = 1.0
-        drive_msg.drive.steering_angle = self.max_steer
-        self.drive_pub.publish(drive_msg)
-        time.sleep(1.25)
-
-        drive_msg.drive.speed = -1.0
-        drive_msg.drive.steering_angle = -self.max_steer
-        self.drive_pub.publish(drive_msg)
-        time.sleep(0.75)
-
-        drive_msg.drive.speed = 1.0
-        drive_msg.drive.steering_angle = self.max_steer
-        self.drive_pub.publish(drive_msg)
-        time.sleep(.75)
-
+        self.is_in_traffic_and_buffer_zone = False
+        self.is_in_buffer_zone = False
+        self.traffic_cooldown = 0
+        
         turn_msg = Bool()
         turn_msg.data = True
         self.turn_success_pub.publish(turn_msg)
+        self.hard_steering = False
+
 
 
 
     def pose_callback(self, odometry_msg):
-
-        # self.get_logger().info(f"{self.num_shells=}")
-
-        if self.num_shells < 3: return
-
+        # self.get_logger().info("receiving pose. jittering...")
+        if self.hard_steering: return
+        if self.traffic_stop: 
+            # self.get_logger().info("stopping...")
+            if time.time() - self.go_timer < 10 and not self.green_lights: 
+                self.jitter_wheels()
+                return
+            if time.time() - self.go_timer > 10:
+                self.get_logger().info("TOO LONG OF A WAIT. GO GO GO")
+            if self.green_lights:
+                self.get_logger().info("GREEN LIGHT GO GO GO")
+            self.get_logger().info("GREEN GO GO GO")
+            self.traffic_cooldown = time.time()
+            self.traffic_stop = False
+      
+        # if self.num_shells < 3: return
         # process trajectory points into np arrays
         points = np.array(self.lane_traj.points)
 
@@ -219,47 +379,39 @@ class PurePursuit(Node):
         car_pos_x = odometry_msg.pose.pose.position.x
         car_pos_y = odometry_msg.pose.pose.position.y
 
-        # # IN END ZONE, U TURN
-        # car_in_endzone = self.in_endzone(car_pos_x, car_pos_y)
-        # if car_in_endzone and not self.car_in_endzone:
-        #     self.lane_traj.points.reverse()
+        self.is_in_traffic_buffer_zone = self.in_traffic_and_buffer_zone(car_pos_x, car_pos_y)
 
-        #     # # U - TURN
-        #     # drive_msg = AckermannDriveStamped()
-        #     # drive_msg.drive.speed = 1.0
-        #     # steer_angle = self.max_steer
-        #     # drive_msg.drive.steering_angle = steer_angle
-        #     # self.drive_pub.publish(drive_msg)
-        #     # time.sleep(2)
+        # stop near traffic light
+        if time.time() - self.traffic_cooldown > 10 and self.in_buffer_zone(car_pos_x, car_pos_y):
+            if not self.is_in_buffer_zone:
+                self.get_logger().info("Entering Buffer")
+                self.is_in_buffer_zone = True
+                self.green_lights = False
+                zone_msg = Bool()
+                zone_msg.data = True
+                # self.traffic_zone_pub.publish(zone_msg)
+        else:
+            if self.is_in_buffer_zone:
+                self.get_logger().info("Exiting Buffer")
+                zone_msg = Bool()
+                zone_msg.data = False
 
-
-        #     # 3-Point Turn
-        #     drive_msg = AckermannDriveStamped()
-
-        #     drive_msg.drive.speed = 1.0
-        #     drive_msg.drive.steering_angle = self.max_steer
-        #     self.drive_pub.publish(drive_msg)
-        #     time.sleep(1.25)
-
-        #     drive_msg.drive.speed = -1.0
-        #     drive_msg.drive.steering_angle = -self.max_steer
-        #     self.drive_pub.publish(drive_msg)
-        #     time.sleep(0.75)
-
-        #     drive_msg.drive.speed = 1.0
-        #     drive_msg.drive.steering_angle = self.max_steer
-        #     self.drive_pub.publish(drive_msg)
-        #     time.sleep(.75)
-
-        #     self.car_in_endzone = True
-        #     return
-        # if not car_in_endzone and self.car_in_endzone:
-        #     self.car_in_endzone = False
+                self.is_in_buffer_zone = False
+                
+                # self.traffic_zone_pub.publish(zone_msg)
+                if not self.green_lights:
+                    self.traffic_stop = True
+                    self.get_logger().info("RED LIGHT STOP")
+                    self.go_timer = time.time()
+                    return
+                self.get_logger().info("GREEN GO")
+                self.traffic_cooldown = time.time()
+            self.is_in_buffer_zone = False
 
         car_angle = 2 * np.arctan2(odometry_msg.pose.pose.orientation.z, odometry_msg.pose.pose.orientation.w)
 
         self.car_pos = np.array([car_pos_x, car_pos_y])
-        self.car_angle = car_angle
+        self.car_angle = car_angle 
 
         # get info about closest segment
         closest_segment_index = self.find_closest_segment(traj_x, traj_y, car_pos_x, car_pos_y)
@@ -278,19 +430,20 @@ class PurePursuit(Node):
             self.drive_pub.publish(drive_msg)
 
             if self.follow_shell:
-                time.sleep(5)
-                drive_msg = AckermannDriveStamped()
-                drive_msg.drive.speed = -1.0
-                self.drive_pub.publish(drive_msg)
-                # time.sleep(2)
-                time.sleep(np.linalg.norm(np.array(self.shell_traj.points[0]) - np.array(self.shell_traj.points[1])))
+                self.park(5)
+
+                green_msg = Bool()
+                green_msg.data = True
+                self.green_callback(green_msg)
+                if self.in_traffic_and_buffer_zone(car_pos_x, car_pos_y):
+                    self.traffic_cooldown = time.time()
+
                 self.follow_shell = False
+                msg = Bool()
+                msg.data = True
+                self.shell_collect_pub.publish(msg)
                 return
-            
-            
-            # avg_dist = self.tot_dist / self.num_dist
-            # self.get_logger().info("Average error: %s" % avg_dist)
-            # self.initialized_traj = False
+
             return
 
 
@@ -308,20 +461,23 @@ class PurePursuit(Node):
         # convert target point to the car's frame
         car_to_target_x, car_to_target_y = self.to_car_frame(target_point_x, target_point_y, car_pos_x, car_pos_y, car_angle)
 
+        # apply lane offset
+        if not self.follow_shell and not self.in_pillar_zone(car_pos_x, car_pos_y) and not self.in_pillar_zone(car_to_target_x, car_to_seg_start_y):
+            # car_to_target_y -= self.lane_offset
 
-        if not self.follow_shell:
-            car_to_target_x -= self.lane_offset
-            car_to_target_y -= self.lane_offset
+            angle = np.arctan2(car_to_target_y, car_to_target_x)
 
+            if abs(angle) <= np.pi / 6:
+                car_to_target_y -= self.lane_offset
+            else:
+                car_to_target_y -= np.sign(angle) * self.lane_offset / 4
+                car_to_target_x += self.lane_offset
 
-        # # U TURN
-        # if closest_segment_index + 1 == len(traj_x) - 1 and car_to_target_x < -0.5 and not self.follow_shell:
-        #     drive_msg = AckermannDriveStamped()
-        #     drive_msg.drive.speed = self.lookahead * self.speed_to_lookahead
-        #     steer_angle = self.max_steer
-        #     drive_msg.drive.steering_angle = steer_angle
-        #     self.drive_pub.publish(drive_msg)
-        #     return
+            # if abs(angle) >= np.pi/12:
+            #     car_to_target_x += np.sign(angle) * self.lane_offset * .25
+
+        if self.in_pillar_zone(car_pos_x, car_pos_y) or self.in_pillar_zone(car_to_target_x, car_to_seg_start_y):
+            car_to_target_y += self.lane_offset
 
         # Visualize Stuff
         VisualizationTools.plot_line(np.array([0, car_to_target_x]), np.array([0, car_to_target_y]), self.target_pub, frame="base_link")
@@ -329,7 +485,6 @@ class PurePursuit(Node):
         circle_x = self.lookahead * np.cos(angles)
         circle_y = self.lookahead * np.sin(angles)
         VisualizationTools.plot_line(circle_x, circle_y, self.radius_pub, frame="base_link")
-
 
         # angle to target point
         angle_error = np.arctan2(car_to_target_y, car_to_target_x)
@@ -340,17 +495,20 @@ class PurePursuit(Node):
                                         * (self.max_lookahead - self.min_lookahead)
 
         drive_msg = AckermannDriveStamped()
-        drive_msg.drive.speed = self.lookahead * self.speed_to_lookahead
+        drive_msg.drive.speed = self.lookahead * self.speed_to_lookahead 
+        if self.is_in_buffer_zone: drive_msg.drive.speed = 0.5 
 
         steer_angle = np.arctan2((self.wheelbase_length*np.sin(angle_error)), 
                                  0.5*self.lookahead + self.wheelbase_length*np.cos(angle_error))
         
         steer_angle = np.clip(steer_angle, -self.max_steer, self.max_steer)
-        drive_msg.drive.steering_angle = steer_angle
+        drive_msg.drive.steering_angle = steer_angle + self.real_car_angle_offset
         self.drive_pub.publish(drive_msg)
+
 
     def trajectory_callback(self, msg):
         self.get_logger().info(f"Receiving new trajectory {len(msg.poses)} points")
+        self.follow_shell = True
 
         self.shell_traj.clear()
         self.shell_traj.fromPoseArray(msg)
@@ -366,15 +524,11 @@ class PurePursuit(Node):
         slope = diff[1] / diff[0]
         angle = -np.arctan(slope)
 
-        drive_msg = AckermannDriveStamped()
-        drive_msg.drive.speed = -1.0
-        drive_msg.drive.steering_angle = np.sign(angle) * self.max_steer
-        self.drive_pub.publish(drive_msg)
-        time.sleep(self.wheelbase_length * np.abs(angle) / np.tan(self.max_steer))
+        self.park(0.1)
+        # self.reverse(self.wheelbase_length * np.abs(angle) / np.tan(self.max_steer), np.sign(angle) * self.max_steer)
 
-        # self.trajectory.save("current_trajectory.traj")
 
-        self.follow_shell = True
+        
 
     def find_closest_segment(self, x, y, car_x, car_y):
         """Finds closest line segment in trajectory and returns its index.

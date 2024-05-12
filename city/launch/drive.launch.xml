@@ -1,10 +1,21 @@
 <launch>
     <node pkg="city" exec="trajectory_follower" name="trajectory_follower" output="screen">
         <param from="$(find-pkg-share city)/config/real_config.yaml"/>
-        <param name="lane" value="$(find-pkg-share path_planning)/example_trajectories/full-lane.traj"/>
+        <param name="lane" value="$(find-pkg-share city)/example_trajectories/full-lane.traj"/>
     </node>
-    <node pkg="localization" exec="localize" name="localization" output="screen">
+    <node pkg="city" exec="trajectory_planner" name="trajectory_planner" output="screen">
+        <param from="$(find-pkg-share city)/config/real_config.yaml"/>
+        <param name="lane" value="$(find-pkg-share city)/example_trajectories/full-lane.traj"/>
+    </node>
+    <node pkg="city" exec="stop_detector" name="stop_detector" output="screen">
+        <param from="$(find-pkg-share city)/config/real_config.yaml"/>
+    </node>
+    <node pkg="localization" exec="particle_filter" name="particle_filter" output="screen">
         <param from="$(find-pkg-share city)/config/pf_config.yaml"/>
-        <param name="lane" value="$(find-pkg-share path_planning)/example_trajectories/full-lane.traj"/>
+    </node>
+    <node pkg="city" exec="pedestrian_avoider" name="pedestrian_avoider" output="screen">
+        <param from="$(find-pkg-share city)/config/real_config.yaml"/>
+    </node>
+    <node pkg="city" exec="light_detection" name="light_detection" output="screen">
     </node>
 </launch>

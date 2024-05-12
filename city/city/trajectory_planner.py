@@ -35,10 +35,14 @@ class PathPlan(Node):
         self.map_topic = self.get_parameter('map_topic').get_parameter_value().string_value
         self.initial_pose_topic = self.get_parameter('initial_pose_topic').get_parameter_value().string_value
 
+        self.get_logger().info(f"{self.odom_topic=}")
+
         self.shell_radius = 5  # meters
-        self.dist_from_shell = 0.5  # meters
+        self.dist_from_shell = 0  # meters
+
 
         self.shell_paths = []
+        self.shell_collected = True
 
         self.turn_zone_lower = np.array([[-16, 23], # narrow hallway 1
                                          [-22, 29], # narrow hallway 2
@@ -53,10 +57,13 @@ class PathPlan(Node):
                                          [-51, 24], # vending machine hallway
                                         ])
         
-        self.endzone_lower = np.array([[-25, -5],
-                                       [-60, -5],])
-        self.endzone_upper = np.array([[-16, 2],
-                                       [-51, 2],])
+        # self.endzone_lower = np.array([[-25, -5],
+        #                                [-60, -5],])
+        # self.endzone_upper = np.array([[-16, 2],
+        #                                [-51, 7],]) # -51, 2 before
+        
+        self.endzone_lower = np.array([[-60, -5],])
+        self.endzone_upper = np.array([[-51, 7],]) # -51, 2 before
 
 
         self.map_sub = self.create_subscription(
@@ -153,7 +160,7 @@ class PathPlan(Node):
 
         self.shell_points = []
 
-        map_path = os.path.join(get_package_share_directory('path_planning'),'maps/custom_map.png')
+        map_path = os.path.join(get_package_share_directory('city'),'maps/custom_map.png')
 
         self.map_data = cv2.imread(map_path, cv2.IMREAD_GRAYSCALE)
 
@@ -173,8 +180,8 @@ class PathPlan(Node):
 
         self.RRT_planner = RRT(self.map_info)
 
-        self.shell_pub = self.create_publisher(Marker, "/shell_point", 3)
-        self.shell_near_pub = self.create_publisher(Marker, "/shell_near_point", 3)
+        self.shell_pub = self.create_publisher(MarkerArray, "/shell_point", 3)
+        # self.shell_near_pub = self.create_publisher(Marker, "/shell_near_point", 3)
 
         self.turn_pub = self.create_publisher(
             Float32,
@@ -188,6 +195,13 @@ class PathPlan(Node):
             1
         )
 
+        self.shell_collected_sub = self.create_subscription(
+            Bool,
+            "/shell_collected",
+            self.shell_collected_callback,
+            3
+        )
+
         self.initialized = False
 
         self.turning = False
@@ -196,9 +210,15 @@ class PathPlan(Node):
 
         self.car_in_endzone = True
 
+        self.first_turn_cooldown = time.time()
+
+        # self.out_of_start = False
+
         self.get_logger().info("------READY-----")
 
-
+    def shell_collected_callback(self, msg):
+        self.get_logger().info("Collected shell")
+        self.shell_collected = True
 
 
     def in_bounds(self, lower_bounds, upper_bounds, x, y):
@@ -224,6 +244,10 @@ class PathPlan(Node):
         self.turning = False
     def turn_around(self):
         if self.turning: return
+        if not self.shell_collected: return
+
+        self.get_logger().info("turning around...")
+        
         turn_msg = Float32()
         turn_msg.data = 420.69
         self.turn_pub.publish(turn_msg)
@@ -231,21 +255,30 @@ class PathPlan(Node):
         # time.sleep(5)
 
     def shell_path(self, msg):
-        if not self.initialized: return
 
         car_pos_x = msg.pose.pose.position.x
         car_pos_y = msg.pose.pose.position.y
 
-        car_pos = np.array([car_pos_x, car_pos_y])
+        car_pos = np.array([car_pos_x, car_pos_y]) 
 
         # self.get_logger().info(f'{self.shell_points=}')
 
         if self.in_endzone(car_pos_x, car_pos_y):
             if self.car_in_endzone: return
+            self.get_logger().info("turning around in end zone")
+            # if not self.out_of_start: return
+            # if time.time() - self.start_cooldown < 30: return
             self.car_in_endzone = True
+            self.get_logger().info("endzone turn")
             self.turn_around()
             return
+        
         self.car_in_endzone = False
+        # if not self.out_of_start:
+        #     self.start_cooldown = time.time()
+        #     self.out_of_start = True
+
+        if not self.initialized: return
 
         if len(self.shell_points) == 0: 
             if not self.in_turn_zone(car_pos_x, car_pos_y): return
@@ -253,9 +286,13 @@ class PathPlan(Node):
             # turn back towards start point
             car_side = self.car_side
             if car_side == 75:
+                self.get_logger().info("turn towards start")
                 self.turn_around()
 
             return
+        
+        # previous shell has not been collected
+        if not self.shell_collected: return 
         
         # self.get_logger().info(f'{self.shell_points[0]}')
         shell_point, shell_side = self.shell_points[0]
@@ -271,7 +308,6 @@ class PathPlan(Node):
         shell_index = self.find_closest_segment(traj_x, traj_y, shell_point[0], shell_point[1])
         
         if shell_side != car_side:
-            if car_side == 50: return
             if not self.in_turn_zone(car_pos_x, car_pos_y): return
 
             # self.get_logger().info(f"{car_index=}, {shell_index=}, {car_side=}, {shell_side=}")
@@ -279,14 +315,17 @@ class PathPlan(Node):
             if car_index == shell_index: return
             if (car_index > shell_index) == (car_side > shell_side):
                 # self.get_logger().info("Turn")
+                self.get_logger().info("turn for shell on other side")
                 self.turn_around()
 
             return
         
-        if car_side == 25 and shell_index > car_index:
+        if self.in_turn_zone(car_pos_x, car_pos_y) and car_side == 25 and shell_index > car_index:
+            self.get_logger().info(f"u turn for point behind. same inner lane {shell_index} {car_index}")
             self.turn_around()
             return
-        if car_side == 75 and shell_index < car_index:
+        if self.in_turn_zone(car_pos_x, car_pos_y) and car_side == 75 and shell_index < car_index:
+            self.get_logger().info(f"u turn for point behind. same outer lane. {shell_index} {car_index}")
             self.turn_around()
             return       
 
@@ -311,8 +350,12 @@ class PathPlan(Node):
 
         path = self.RRT_planner.plan_straight_line(car_pos, shell_point)
 
+        # self.get_logger().info("attempted to plan...")
+
         if path is None:
             return
+        
+        self.get_logger().info("plan successful")
         
         self.shell_points.pop(0)
 
@@ -322,6 +365,7 @@ class PathPlan(Node):
         self.trajectory.save(self.save_path)
         self.traj_pub.publish(self.trajectory.toPoseArray())
         self.trajectory.publish_viz()
+        self.shell_collected = False
 
     
     def find_closest_point(self, x, y):
@@ -366,16 +410,18 @@ class PathPlan(Node):
 
         # self.get_logger().info(f'{point_msg.point.x=} {point_msg.point.y=}')
         # self.get_logger().info(f'{near_point=}')
-        if self.real_to_map(near_point) == 100:
+        if self.real_to_map(near_point) != 75 and self.real_to_map(near_point) != 25:
+            self.get_logger().info("Cannot Add Shell Here")
             return
 
         side = self.real_to_map(near_point)
         self.shell_points.append((near_point, side))
 
+        self.get_logger().info(f"{side=}")
+
         if len(self.shell_points) >= 3: self.initialized = True
 
-        self.pub_point(self.shell_pub, (0.0, 1.0, 0.0), (point_msg.point.x, point_msg.point.y))
-        self.pub_point(self.shell_near_pub, (1.0, 0.0, 0.0), near_point)
+        self.pub_points([point for point, side in self.shell_points])
 
     def plan_path(self, start_point, end_point, map):
 
@@ -499,6 +545,7 @@ class PathPlan(Node):
         return self.map_data[self.index_from_pixel(self.real_to_pixel(point))]
 
     def pose_cb(self, msg):
+        # self.shell_points = []
         # gets the initial pose 
         timestamp = msg.header.stamp
         frame_id = msg.header.frame_id
@@ -561,9 +608,9 @@ class PathPlan(Node):
 
     def pub_points(self, points):
         color = ColorRGBA()
-        color.r = np.random.random()
-        color.g = np.random.random()
-        color.b = np.random.random()
+        color.r = 0.0
+        color.g = 0.0
+        color.b = 1.0
         color.a = 1.0
 
         marker_array = MarkerArray()
@@ -586,7 +633,7 @@ class PathPlan(Node):
 
             marker_array.markers.append(marker)
         
-        self.debug_pub.publish(marker_array)
+        self.shell_pub.publish(marker_array)
         self.get_logger().info('points published')
 
     def edit_map(self, p1, p2): #where p1 and p2 are adjacent points in .traj

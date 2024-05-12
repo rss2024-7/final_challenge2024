@@ -13,6 +13,8 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name + '/launch', ['launch/drive.launch.xml']),
+        ('share/' + package_name + '/launch', ['launch/drive_staff.launch.xml']),
+        ('share/' + package_name + '/launch', ['launch/drive_path_plan.launch.xml']),
         ('share/' + package_name + '/launch', ['launch/sim_drive.launch.xml']),
         ('share/' + package_name + '/launch', ['launch/sim_follow.launch.xml']),
         ('share/city/maps', glob.glob(os.path.join('maps', '*'))),
@@ -30,6 +32,9 @@ setup(
         'console_scripts': [
             'trajectory_follower = city.trajectory_follower:main',
             'trajectory_planner = city.trajectory_planner:main',
+            'stop_detector = city.stop_detector:main',
+            'light_detection = city.light_detection:main',
+            'pedestrian_avoider = city.pedestrian_avoider:main',
         ],
     },
 )

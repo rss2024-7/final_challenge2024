@@ -1,0 +1,16 @@
+<launch>
+    <node pkg="city" exec="trajectory_follower" name="trajectory_follower" output="screen">
+        <param from="$(find-pkg-share city)/config/real_config.yaml"/>
+        <param name="lane" value="$(find-pkg-share city)/example_trajectories/full-lane.traj"/>
+    </node>
+    <node pkg="city" exec="trajectory_planner" name="trajectory_planner" output="screen">
+        <param from="$(find-pkg-share city)/config/real_config.yaml"/>
+        <param name="lane" value="$(find-pkg-share city)/example_trajectories/full-lane.traj"/>
+    </node>
+    <node pkg="city" exec="stop_detector" name="stop_detector" output="screen">
+        <param from="$(find-pkg-share city)/config/real_config.yaml"/>
+    </node>
+    <node pkg="staff_localization" exec="particle_filter" name="particle_filter" output="screen">
+        <param from="$(find-pkg-share city)/config/pf_config.yaml"/>
+    </node>
+</launch>
