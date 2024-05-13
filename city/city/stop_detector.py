@@ -14,7 +14,7 @@ import time
 class SignDetector(Node):
     def __init__(self):
         super().__init__("stop_detector")
-        self.detector = StopSignDetector(0.1)
+        self.detector = StopSignDetector(0.3) #0.1
         self.publisher = None #TODO
         self.subscriber = self.create_subscription(Image, "/zed/zed_node/rgb/image_rect_color", self.callback, 10)
         self.debug_pub = self.create_publisher(Image, "/stop_img", 10)

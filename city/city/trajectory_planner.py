@@ -37,8 +37,8 @@ class PathPlan(Node):
 
         self.get_logger().info(f"{self.odom_topic=}")
 
-        self.shell_radius = 5  # meters
-        self.dist_from_shell = 0  # meters
+        self.shell_radius = 3  # meters
+        self.dist_from_shell = 0.2  # meters
 
 
         self.shell_paths = []
@@ -47,13 +47,13 @@ class PathPlan(Node):
         self.turn_zone_lower = np.array([[-16, 23], # narrow hallway 1
                                          [-22, 29], # narrow hallway 2
                                          [-49, 30], # between narrow hallway and vending machine hallway
-                                         [-58, 28], # between vending machine hallway crosswalks
+                                         [-58, 26], # between vending machine hallway crosswalks
                                          [-58, 5], # vending machine hallway
                                         ])
         self.turn_zone_upper = np.array([[-11, 28], # narrow hallway 1
                                          [-19, 32], # narrow hallway 2
                                          [-34, 37], # between narrow hallway and vending machine hallway
-                                         [-51, 32], # between vending machine hallway crosswalks
+                                         [-51, 34], # between vending machine hallway crosswalks
                                          [-51, 24], # vending machine hallway
                                         ])
         
@@ -308,11 +308,11 @@ class PathPlan(Node):
         shell_index = self.find_closest_segment(traj_x, traj_y, shell_point[0], shell_point[1])
         
         if shell_side != car_side:
-            if not self.in_turn_zone(car_pos_x, car_pos_y): return
+            # if not self.in_turn_zone(car_pos_x, car_pos_y): return
 
             # self.get_logger().info(f"{car_index=}, {shell_index=}, {car_side=}, {shell_side=}")
             # self.get_logger().info(f"{(car_index > shell_index)=}, {(car_side > shell_side)=}")
-            if car_index == shell_index: return
+            # if car_index == shell_index: return
             if (car_index > shell_index) == (car_side > shell_side):
                 # self.get_logger().info("Turn")
                 self.get_logger().info("turn for shell on other side")
@@ -320,14 +320,14 @@ class PathPlan(Node):
 
             return
         
-        if self.in_turn_zone(car_pos_x, car_pos_y) and car_side == 25 and shell_index > car_index:
-            self.get_logger().info(f"u turn for point behind. same inner lane {shell_index} {car_index}")
-            self.turn_around()
-            return
-        if self.in_turn_zone(car_pos_x, car_pos_y) and car_side == 75 and shell_index < car_index:
-            self.get_logger().info(f"u turn for point behind. same outer lane. {shell_index} {car_index}")
-            self.turn_around()
-            return       
+        # if car_side == 25 and shell_index > car_index:
+        #     self.get_logger().info(f"u turn for point behind. same inner lane {shell_index} {car_index}")
+        #     self.turn_around()
+        #     return
+        # if car_side == 75 and shell_index < car_index:
+        #     self.get_logger().info(f"u turn for point behind. same outer lane. {shell_index} {car_index}")
+        #     self.turn_around()
+        #     return       
 
         
         if np.linalg.norm(car_pos - self.shell_points[0][0]) > self.shell_radius:
@@ -487,12 +487,12 @@ class PathPlan(Node):
         projections = v + t[:, np.newaxis] * (w - v)
         min_distances = np.linalg.norm(p - projections, axis=1)
 
-        # if too close to end point of segment, take it out of consideration for closest line segment
-        start_point_distances = np.linalg.norm(v-p, axis=1)
-        min_distances[np.where(start_point_distances[:-1] < self.shell_radius)] += 500
+        # # if too close to end point of segment, take it out of consideration for closest line segment
+        # start_point_distances = np.linalg.norm(v-p, axis=1)
+        # min_distances[np.where(start_point_distances[:-1] < self.shell_radius)] += 500
 
-        if np.min(min_distances) > self.shell_radius:
-            self.shell_radius = np.min(min_distances)
+        # if np.min(min_distances) > self.shell_radius:
+        #     self.shell_radius = np.min(min_distances)
 
         closest_segment_index = np.where(min_distances == np.min(min_distances))
 
@@ -563,6 +563,9 @@ class PathPlan(Node):
         self.get_logger().info("starting pose: " + np.array2string(self.current_pose))
 
     def goal_cb(self, msg):
+        self.shell_points = []
+        self.initialized = False
+        return
         # gets the goal pose
         timestamp = msg.header.stamp
         frame_id = msg.header.frame_id

@@ -148,8 +148,8 @@ class PurePursuit(Node):
         self.traffic_locations = np.array([[-10.5, 16.6],
                                             [-28.7, 34.1],
                                             [-54.8, 24.6]])
-        self.traffic_zone_radius = 1.55 # meters
-        self.traffic_buffer_radius = 3.4
+        self.traffic_zone_radius = 1.3 # 1.5 # meters
+        self.traffic_buffer_radius = 3 #3.05
         
         self.is_near_traffic = False
         self.traffic_stop = False
@@ -328,7 +328,7 @@ class PurePursuit(Node):
 
         # Forward Left
         time_start = time.time()
-        while time.time() - time_start < 0.5:
+        while time.time() - time_start < 0.0:
             drive_msg = AckermannDriveStamped()
             drive_msg.drive.speed = 1.0
             drive_msg.drive.steering_angle = self.max_steer / 2
@@ -338,7 +338,7 @@ class PurePursuit(Node):
 
         self.is_in_traffic_and_buffer_zone = False
         self.is_in_buffer_zone = False
-        self.traffic_cooldown = 0
+        self.traffic_cooldown = time.time()
         
         turn_msg = Bool()
         turn_msg.data = True
@@ -378,6 +378,7 @@ class PurePursuit(Node):
         # retrieve odometry data
         car_pos_x = odometry_msg.pose.pose.position.x
         car_pos_y = odometry_msg.pose.pose.position.y
+        angle = 2 * np.arctan2(odometry_msg.pose.pose.orientation.z, odometry_msg.pose.pose.orientation.w)
 
         self.is_in_traffic_buffer_zone = self.in_traffic_and_buffer_zone(car_pos_x, car_pos_y)
 
@@ -422,9 +423,9 @@ class PurePursuit(Node):
 
         # on last segment and past end
         if (closest_segment_index + 1 == len(traj_x) - 1 and \
-            car_to_seg_start_x < 0 and \
-            -2 < car_to_seg_end_x < 0 and \
-                car_to_seg_end_x ** 2 + car_to_seg_end_y ** 2 <= 2): 
+            car_to_seg_start_x < 2 and \
+            -2 < car_to_seg_end_x < 2 and \
+                car_to_seg_end_x ** 2 + car_to_seg_end_y ** 2 <= 1): 
             drive_msg = AckermannDriveStamped()
             drive_msg.drive.speed = 0.0
             self.drive_pub.publish(drive_msg)
@@ -462,7 +463,7 @@ class PurePursuit(Node):
         car_to_target_x, car_to_target_y = self.to_car_frame(target_point_x, target_point_y, car_pos_x, car_pos_y, car_angle)
 
         # apply lane offset
-        if not self.follow_shell and not self.in_pillar_zone(car_pos_x, car_pos_y) and not self.in_pillar_zone(car_to_target_x, car_to_seg_start_y):
+        if not self.follow_shell and not self.in_pillar_zone(target_point_x, target_point_y): # and not self.in_pillar_zone(car_pos_x, car_pos_y) and not self.in_pillar_zone(car_to_target_x, car_to_seg_start_y):
             # car_to_target_y -= self.lane_offset
 
             angle = np.arctan2(car_to_target_y, car_to_target_x)
@@ -476,7 +477,7 @@ class PurePursuit(Node):
             # if abs(angle) >= np.pi/12:
             #     car_to_target_x += np.sign(angle) * self.lane_offset * .25
 
-        if self.in_pillar_zone(car_pos_x, car_pos_y) or self.in_pillar_zone(car_to_target_x, car_to_seg_start_y):
+        if self.in_pillar_zone(target_point_x, target_point_y): # self.in_pillar_zone(car_pos_x, car_pos_y) or self.in_pillar_zone(car_to_target_x, car_to_seg_start_y):
             car_to_target_y += self.lane_offset
 
         # Visualize Stuff
@@ -525,7 +526,7 @@ class PurePursuit(Node):
         angle = -np.arctan(slope)
 
         self.park(0.1)
-        # self.reverse(self.wheelbase_length * np.abs(angle) / np.tan(self.max_steer), np.sign(angle) * self.max_steer)
+        self.reverse(self.wheelbase_length * np.abs(angle) / np.tan(self.max_steer), np.sign(angle) * self.max_steer)
 
 
         
